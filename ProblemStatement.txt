@@ -1,0 +1,19 @@
+Using REPLIT, you will modify the code you wrote for M1 Assignment.
+Modify the creation of the array as follows:
+
+
+Open the file and count how many elements are in the file.
+
+Pass the number of elements in the file to a function that will
+dynamically allocate an array of integers with the number of
+elements equal to the number in the file.
+The function should return a pointer to the array.
+
+The remainder of the program should behave as outlined in the M1 Assignment,
+but using pointer notation, not array notation.
+
+If you used a Bubble Sort in the M1 assignment, please update that to
+either a Selection Sort or Insertion Sort.
+
+I will test the program with a different file of values,
+so be sure it works for any number of values in a file.
