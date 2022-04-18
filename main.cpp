@@ -2,13 +2,55 @@
  * Gabriel Talbert Bunt
  * CS 211
  * 04/18/2022
+ *
  * Description:
+ * This program reads a sequence of space delimited long long ints
+ * from a file (testdata.txt), puts them into an array, and prints them.
+ * It then sorts the array using selection sort.
+ * The user is then prompted for an int to search for,
+ * (which is up to long long size, not that the user needs to know,)
+ * which is searched for in the sorted array using binary search.
+ * If the quarry is found, it's printed that it was found and
+ * how many comparisons it took.
+ * If the quarry is not found, it's printed that it was not found and
+ * how many comparisons took place.
+ * Then the program exits with no errors (0).
+ *
+ * Note on execution:
+ * I went ahead and took your advice from one of the lectures to
+ * just use the largest data type since memory is cheap.
+ * It makes some parts more annoying to read, but this should mostly
+ * solve the issue of an input number being too large to search for.
+ * To be honest, I replaced via search and replace post-haste,
+ * but in the future I'll actually decide how large a
+ * number should need to be.
+ *
+ * Notes on style:
+ * As promised, I've commented less in this assignment. I'd like to think that
+ * my variable names serve as comments on their own and that commenting on what
+ * things are doing would be redundant. However, I have left a small number of
+ * comments on why things are a certain way, as well as docstrings.
+ * I've also switched over to function() {
+ * } formatting as I personally find it more concise and readable.
  *
  *
- *
- *
- * Test Data:
- *
+ * Test Data (same as last time):
+ * input                      | output                       | passed?
+ * ---------------------------|------------------------------|---------
+ * 5 4 6 2 1 3 9 7 8 10 11 12 | 5 4 6 2 1 3 9 7 8 10 11 12   | y (file)
+ * ---------------------------|------------------------------|---------
+ * 6                          |  6  found,     1 comparison  | y
+ * 9                          |  9  found,     2 comparisons | y
+ * 12                         |  12 found,     4 comparisons | y
+ * 13                         |  13 NOT found, 4 comparisons | y
+ * 0                          |  0  NOT found, 5 comparisons | y
+ * -1                         | -1  NOT found, 5 comparisons | y
+ * 1a                         |  1  found,     4 comparisons | y*1
+ * 1 1                        |  1  found,     4 comparisons | y*1
+ * a                          | Loops 64 times, then exits   | n*1
+ * aa                         | Loops 64 times, then exits   | n*1
+ * a1                         | Loops 64 times, then exits   | n*1
+ * 9999999999                 | Loops 64 times, then exits   | n*2
  */
 
 #include <fstream>
@@ -16,45 +58,48 @@
 #include <limits>
 using namespace std;
 
-int CountIntegerElementsInFile(const string& file_name);
-int* InitializeIntegerArray(const int& size);
-void FillIntegerArray(const int& size, int* integer_array, const string& file_name);
-void PrintIntegerArray(const int* integer_array, const int& size);
-void SortIntegerArray(int* integer_array, const int& size);
-int PromptInteger();
-bool SearchArrayForInteger(const int* integer_array, const int& size, const int& quarry, int& comparisons);
-void PrintSearchResults(const bool& found, const int& comparisons, const int& quarry);
+long long CountLongLongElementsInFile(const string& file_name);
+long long* InitializeLongLongArray(const long long& size);
+void FillLongLongArray(const long long& size, long long* longlong_array, const string& file_name);
+void PrintLongLongArray(const long long* longlong_array, const long long& size);
+void SortLongLongArray(long long* longlong_array, const long long& size);
+long long PromptLongLong();
+bool SearchArrayForLongLong(const long long* longlong_array,
+							const long long& size,
+							const long long& quarry,
+							long long& comparisons);
+void PrintSearchResults(const bool& found, const long long& comparisons, const long long& quarry);
 
 int main() {
 	const string kFileName = "testdata.txt";
-	const int kSize = CountIntegerElementsInFile(kFileName);
-	int* integer_array = InitializeIntegerArray(kSize);
-	FillIntegerArray(kSize, integer_array, kFileName);
+	const long long kSize = CountLongLongElementsInFile(kFileName);
+	long long* longlong_array = InitializeLongLongArray(kSize);
+	FillLongLongArray(kSize, longlong_array, kFileName);
 
-	PrintIntegerArray(integer_array, kSize);
+	PrintLongLongArray(longlong_array, kSize);
 	cout << endl;
 
-	SortIntegerArray(integer_array, kSize);
-	PrintIntegerArray(integer_array, kSize);
+	SortLongLongArray(longlong_array, kSize);
+	PrintLongLongArray(longlong_array, kSize);
 
-	int quarry = PromptInteger();
-	int comparisons;
-	bool search_result = SearchArrayForInteger(integer_array, kSize, quarry, comparisons);
+	long long quarry = PromptLongLong();
+	long long comparisons;
+	bool search_result = SearchArrayForLongLong(longlong_array, kSize, quarry, comparisons);
 
 	PrintSearchResults(search_result, comparisons, quarry);
 
 	// This seems very easy to forget to include...
 	// Especially the square brackets when we're using pointer notation throughout.
 	// When it's not an assignment requirement I definitely prefer the syntactic sugar of array[] notation.
-	delete[] integer_array;
+	delete[] longlong_array;
 	return 0;
 }
 
-int CountIntegerElementsInFile(const string& file_name) {
+long long CountLongLongElementsInFile(const string& file_name) {
 	ifstream in_file;
 	in_file.open(file_name);
-	int size = 0;
-	int garbage;
+	long long size = 0;
+	long long garbage;
 	if (in_file) {
 		while (in_file >> garbage) {
 			size++;
@@ -67,48 +112,48 @@ int CountIntegerElementsInFile(const string& file_name) {
 	return size;
 }
 
-int* InitializeIntegerArray(const int& size) {
-	return (new int[size]);
+long long* InitializeLongLongArray(const long long& size) {
+	return (new long long[size]);
 }
 
-void FillIntegerArray(const int& size, int* integer_array, const string& file_name) {
+void FillLongLongArray(const long long& size, long long* longlong_array, const string& file_name) {
 	ifstream in_file;
 	in_file.open(file_name);
-	for (int index = 0; index < size; index++) {
-		in_file >> *(integer_array + index);
+	for (long long index = 0; index < size; index++) {
+		in_file >> *(longlong_array + index);
 	}
 	in_file.close();
 }
 
-void PrintIntegerArray(const int* integer_array, const int& size) {
+void PrintLongLongArray(const long long* longlong_array, const long long& size) {
 
-	for (int index = 0; index < size; index++) {
-		cout << *(integer_array + index) << " ";
+	for (long long index = 0; index < size; index++) {
+		cout << *(longlong_array + index) << " ";
 	}
 }
 
-void SortIntegerArray(int* integer_array, const int& size) {
-	int smallest;
-	for (int elements_sorted = 0; elements_sorted < size; elements_sorted++) {
+void SortLongLongArray(long long* longlong_array, const long long& size) {
+	long long smallest;
+	for (long long elements_sorted = 0; elements_sorted < size; elements_sorted++) {
 		smallest = elements_sorted;
-		for (int prospective = elements_sorted + 1; prospective < size; prospective++) {
-			if (*(integer_array + prospective) < *(integer_array + smallest)) {
+		for (long long prospective = elements_sorted + 1; prospective < size; prospective++) {
+			if (*(longlong_array + prospective) < *(longlong_array + smallest)) {
 				smallest = prospective;
 			}
 		}
 		if (smallest != elements_sorted) {
-			int temp = *(integer_array + elements_sorted);
-			*(integer_array + elements_sorted) = *(integer_array + smallest);
-			*(integer_array + smallest) = temp;
+			long long temp = *(longlong_array + elements_sorted);
+			*(longlong_array + elements_sorted) = *(longlong_array + smallest);
+			*(longlong_array + smallest) = temp;
 		}
 	}
 }
 
-int PromptInteger() {
+long long PromptLongLong() {
 	// Here as a failsafe to an infinite loop
-	int counter = 0;
+	long long counter = 0;
 
-	int user_number;
+	long long user_number;
 	cout << "\nPlease enter an integer to search for: ";
 	while (!(cin >> user_number)) {
 		cout << "\nInvalid entry.";
@@ -129,15 +174,19 @@ int PromptInteger() {
 	return user_number;
 }
 
-bool SearchArrayForInteger(const int* integer_array, const int& size, const int& quarry, int& comparisons) {
-	int lower_bound = 0;
-	int upper_bound = size - 1;
-	int current_index = (lower_bound + upper_bound) / 2;
+bool SearchArrayForLongLong(const long long* longlong_array,
+							const long long& size,
+							const long long& quarry,
+							long long& comparisons) {
+	long long lower_bound = 0;
+	long long upper_bound = size - 1;
+	long long current_index = (lower_bound + upper_bound) / 2;
 	comparisons = 1;
-	while (lower_bound != upper_bound) {
-		if (*(integer_array + current_index) == quarry) {
-			return true;
-		} else if (*(integer_array + current_index) > quarry) {
+	while (*(longlong_array + current_index) != quarry) {
+		if (lower_bound == upper_bound) {
+			return false;
+		}
+		if (*(longlong_array + current_index) > quarry) {
 			upper_bound = current_index;
 		} else {
 			lower_bound = current_index + 1;
@@ -145,10 +194,10 @@ bool SearchArrayForInteger(const int* integer_array, const int& size, const int&
 		current_index = (lower_bound + upper_bound) / 2;
 		comparisons++;
 	}
-	return false;
+	return true;
 }
 
-void PrintSearchResults(const bool& found, const int& comparisons, const int& quarry) {
+void PrintSearchResults(const bool& found, const long long& comparisons, const long long& quarry) {
 	if (found) {
 		cout << '\"' << quarry << "\" found, taking " << comparisons << " comparison(s)!";
 	} else {
