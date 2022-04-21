@@ -209,25 +209,17 @@ void SortLongLongArray(long long* longlong_array, const long long& size) {
  * @return the user input as long long
  */
 long long PromptLongLong() {
-	// Here as a failsafe to an infinite loop
-	long long counter = 0;
-
+	bool entered_number = false;
 	long long user_number;
-	cout << "\nPlease enter an integer to search for: ";
-	while (!(cin >> user_number)) {
-		cout << "\nInvalid entry.";
+	while (!entered_number) {
 		cout << "\nPlease enter an integer to search for: ";
-		// I don't know why this causes an infinite loop,
-		// as it should just ignore the remainder of the buffer.
-		// I'm guessing that it's related to the '\n',
-		// but cin in general gives me conniptions...
-		cin.ignore(numeric_limits<streamsize>::max(), '\n');
-		// This is here just as a failsafe
-		// so the program doesn't loop for
-		// too long due to the above bug.
-		if (counter++ > 63) {
-			cout << "\nThe program has fallen into an infinite loop.\n";
-			exit(1);
+		cin >> user_number;
+		if (cin.fail()) {
+			cout << "Invalid entry.";
+			cin.clear();
+			cin.ignore(numeric_limits<streamsize>::max(), '\n');
+		} else {
+			entered_number = true;
 		}
 	}
 	return user_number;
